@@ -18,5 +18,11 @@
   "homepage": "https://github.com/developit/resource-router-middleware",
   "peerDependencies": {
     "express": "^4.12.2"
+  },
+  "devDependencies": {
+    "express": "^4.13.3"
+  },
+  "dependencies": {
+    "babel-core": "^5.8.24"
   }
 }
