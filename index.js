@@ -23,18 +23,56 @@ function resource(idKey) {
         url = undefined,
         method = undefined;
 
-    // Get the class prototype methods
-    var functions = Object.getOwnPropertyNames(target.prototype);
+    function __getAllProperties(o, arr) {
+      var functions = Object.getOwnPropertyNames(o);
+      for (var i = 0; i < functions.length; i++) {
+        var v = functions[i];
+        if (arr.indexOf(v) == -1) {
+          arr.push(v);
+        }
+      }
 
-    if (target.middleware) router.use(target.middleware);
+      var po = Object.getPrototypeOf(o)
+      if (po && typeof po !== 'Object') {
+        __getAllProperties(po, arr)
+      }
+
+      return arr;
+    }
+    // Get the class prototype methods
+    // var functions = Object.getOwnPropertyNames(target.prototype)
+
+    var functions = __getAllProperties(target.prototype, [])
+
+    // functions = Object.keys(target.prototype);
+    var middleware = target.middleware || context.middleware;
+    if (middleware) router.use(middleware);
 
     if (~functions.indexOf('load')) {
       router.param(idKey, function (req, res, next, id) {
-        target.prototype.load.call(context, req, id, function (err, data) {
-          if (err) return res.status(404).send(err);
-          req[idKey] = data;
-          next();
-        });
+        target.prototype.load.call(context, req, id).then(function(data) {
+
+          try {
+            data = data || {};
+            var status = 200;
+            if ((data && data.status)) {
+              status = data.status;
+              delete data.status;
+            }
+
+            req[idKey] = data;
+            res.status(status).json(data);
+          } catch (err) {
+            res.status(500).send({message: err.message, stack: err.stack});
+          }
+        }, function(err) {
+          res.status(500).send({message: err.message, stack: err.stack});
+        })
+        // target.prototype.load.call(context, req, id, function (err, data) {
+        //   if (err) return res.status(404).send(err);
+        //   req[idKey] = data;
+        //   next();
+        // });
       });
     }
 
@@ -50,11 +88,33 @@ function resource(idKey) {
       } else continue;
 
       // Hook it up!
-      router[method](url, target.prototype[key].bind(context));
+      // router[method](url, target.prototype[key].bind(context));
+
+
+      __setUpRoute(target, router, method, url, key, context);
     }
 
     return router;
   };
+}
+
+function __setUpRoute(target, router, method, url, key, context) {
+  router[method](url, function(req, res, next) {
+    target.prototype[key].call(context, req).then(function(data) {
+      data = data || {};
+      var status = 200;
+
+      if ((data && data.status)) {
+        status = data.status;
+        delete data.status;
+      }
+
+      res.status(status).json(data);
+
+    }, function(err) {
+      res.status(500).send({message: err.message, stack: err.stack});
+    })
+  })
 }
 
 function route(method, url) {
