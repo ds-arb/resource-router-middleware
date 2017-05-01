@@ -101,16 +101,19 @@ function resource(idKey) {
 function __setUpRoute(target, router, method, url, key, context) {
   router[method](url, function(req, res, next) {
     target.prototype[key].call(context, req).then(function(data) {
-      data = data || {};
-      var status = 200;
+      try {
+        data = data || {};
+        var status = 200;
 
-      if ((data && data.status)) {
-        status = data.status;
-        delete data.status;
+        if ((data && data.status)) {
+          status = data.status;
+          delete data.status;
+        }
+
+        res.status(status).json(data);
+      } catch(err) {
+        res.status(500).send({message: err.message, stack: err.stack});
       }
-
-      res.status(status).json(data);
-
     }, function(err) {
       res.status(500).send({message: err.message, stack: err.stack});
     })
