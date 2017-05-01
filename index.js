@@ -103,14 +103,14 @@ function __setUpRoute(target, router, method, url, key, context) {
     target.prototype[key].call(context, req).then(function(data) {
       try {
         data = data || {};
-        var status = 200;
+        var httpResponseCode = 200;
 
-        if ((data && data.status)) {
-          status = data.status;
-          delete data.status;
+        if ((data && data.httpResponseCode)) {
+          httpResponseCode = data.httpResponseCode;
+          delete data.httpResponseCode;
         }
 
-        res.status(status).json(data);
+        res.status(httpResponseCode).json(data);
       } catch(err) {
         res.status(500).send({message: err.message, stack: err.stack});
       }
