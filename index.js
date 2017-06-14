@@ -51,20 +51,8 @@ function resource(idKey) {
     if (~functions.indexOf('load')) {
       router.param(idKey, function (req, res, next, id) {
         target.prototype.load.call(context, req, id).then(function(data) {
-
-          try {
-            data = data || {};
-            var status = 200;
-            if ((data && data.status)) {
-              status = data.status;
-              delete data.status;
-            }
-
-            req[idKey] = data;
-            res.status(status).json(data);
-          } catch (err) {
-            res.status(500).send({message: err.message, stack: err.stack});
-          }
+          req['entity'] = data;
+          next();
         }, function(err) {
           res.status(500).send({message: err.message, stack: err.stack});
         })
@@ -83,7 +71,8 @@ function resource(idKey) {
         url = target.prototype[key].routeUrl;
         method = target.prototype[key].routeMethod;
       } else if (typeof router[fn] === 'function') {
-        url = ~keyed.indexOf(key) ? '/:' + idKey : '/';
+        // url = ~keyed.indexOf(key) ? '/:' + idKey : '/';
+        url = ~keyed.indexOf(key) ? '/:id' : '/';
         method = fn;
       } else continue;
 
