@@ -54,7 +54,7 @@ function resource(idKey) {
           req['entity'] = data;
           next();
         }, function(err) {
-          res.status(500).send({message: err.message, stack: err.stack});
+          res.status(500).send({message: err.message}) //, stack: err.stack});
         })
         // target.prototype.load.call(context, req, id, function (err, data) {
         //   if (err) return res.status(404).send(err);
@@ -101,10 +101,10 @@ function __setUpRoute(target, router, method, url, key, context) {
 
         res.status(httpResponseCode).json(data);
       } catch(err) {
-        res.status(500).send({message: err.message, stack: err.stack});
+        res.status(500).send({message: err.message}) //, stack: err.stack});
       }
     }, function(err) {
-      res.status(500).send({message: err.message, stack: err.stack});
+      res.status(500).send({message: err.message}) //, stack: err.stack});
     })
   })
 }
